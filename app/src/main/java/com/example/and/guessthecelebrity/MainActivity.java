@@ -22,7 +22,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-    String urlCelebrities="https://www.imdb.com/list/ls052283250",htmlText;
+    // webside where we take the image and name of some celebrities
+    String urlCelebrities="https://www.imdb.com/list/ls052283250",htmlText=null;
     ImageView imageView;
     int celebrityIndex;
     ArrayList<String> names=new ArrayList<String>();
@@ -30,20 +31,8 @@ public class MainActivity extends AppCompatActivity {
     Random rand=new Random();
     ArrayList<Integer> options=new ArrayList<Integer>();
 
-    public void downloadImage(View view){
-        Log.i("Button tapped","It worked!");
-        DownloadImage task=new DownloadImage();
-        Bitmap myImage;
-        try {
-            myImage=task.execute(urlCelebrities).get();
-            imageView.setImageBitmap(myImage);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public class DownloadTask extends AsyncTask<String, Void,String>{
-
+        // download the html source code and save it in a string
         @Override
         protected String doInBackground(String... urls) {
             Log.i("URL",urls[0]);
@@ -73,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public class DownloadImage extends AsyncTask<String,Void,Bitmap>{
-
+        // download the image from the url and keep in a variable
         @Override
         protected Bitmap doInBackground(String... urls) {
             try {
@@ -88,40 +77,40 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
                 return null;
             }
-
-
         }
     }
 
     public void setGame(String html){
+        // generate the names of the celebrities and set the image of the chosen one
         names.clear();
         images.clear();
-        // get url from the images
+        // get urls for the images in the big string of html
         Pattern p=Pattern.compile("src=\"(.*?)jpg\"");
         Matcher m=p.matcher(html);
         while (m.find()) {
             images.add(m.group(1));
         }
 
-        // get name of the celebrities
+        // get the names of the celebrities
         p=Pattern.compile("<img alt=\"(.*?)\"");
         m=p.matcher(html);
-
         while (m.find()){
             names.add(m.group(1));
         }
-        //random celebrity and options
-        celebrityIndex=rand.nextInt(names.size()+1);
+        //randomly generate the chosen celebrity and some more options
+        celebrityIndex=rand.nextInt(names.size());
         options.add(celebrityIndex);
         int aux;
         for (int i=1;i<4;i++){
-            aux=rand.nextInt(names.size()+1);
+            aux=rand.nextInt(names.size());
             if(!options.contains(aux)){
                 options.add(aux);
             }
         }
+        // shuffle the array to make the options random
         Collections.shuffle(options);
 
+        // set all the butons with the options
         Button option1=(Button) findViewById(R.id.button1);
         option1.setTag(options.get(0));
         option1.setText(names.get(options.get(0)));
@@ -138,9 +127,12 @@ public class MainActivity extends AppCompatActivity {
         option4.setTag(options.get(3));
         option4.setText(names.get(options.get(3)));
 
+        // print some important info to check
         Log.i("Celebrity",names.get(celebrityIndex));
+        Log.i("Image",images.get(celebrityIndex));
         Log.i("Options",names.get(options.get(0))+" "+names.get(options.get(1))+" "+names.get(options.get(2))+" "+names.get(options.get(3)));
 
+        // set the image in the image View
         DownloadImage task=new DownloadImage();
         try {
             Bitmap celebrityImage=task.execute(images.get(celebrityIndex)).get();
@@ -153,8 +145,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void checkAnswer(View view){
+        // check if the option chosen it is the correct
         Button pressed=(Button) view;
         int answer=(int) pressed.getTag();
+        // the tags are the index of the celebrities in the names and images arrays
         if (answer==celebrityIndex){
             Toast.makeText(this,"Correct!",Toast.LENGTH_SHORT).show();
             setGame(htmlText);
