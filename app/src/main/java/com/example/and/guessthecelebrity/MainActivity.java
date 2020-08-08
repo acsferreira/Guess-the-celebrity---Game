@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.InputStream;
@@ -25,7 +26,8 @@ public class MainActivity extends AppCompatActivity {
     // webside where we take the image and name of some celebrities
     String urlCelebrities="https://www.imdb.com/list/ls052283250",htmlText=null;
     ImageView imageView;
-    int celebrityIndex;
+    TextView textView;
+    int celebrityIndex,games,score;
     ArrayList<String> names=new ArrayList<String>();
     ArrayList<String> images=new ArrayList<String>();
     Random rand=new Random();
@@ -80,28 +82,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void setGame(String html){
-        // generate the names of the celebrities and set the image of the chosen one
-        names.clear();
-        images.clear();
-        // get urls for the images in the big string of html
-        Pattern p=Pattern.compile("src=\"(.*?)jpg\"");
-        Matcher m=p.matcher(html);
-        while (m.find()) {
-            images.add(m.group(1));
-        }
+    public void restart(View view){
+        score=0;
+        games=0;
+        textView.setText(String.format("%02d/%02d",score,games));
+        setGame(htmlText);
+    }
 
-        // get the names of the celebrities
-        p=Pattern.compile("<img alt=\"(.*?)\"");
-        m=p.matcher(html);
-        while (m.find()){
-            names.add(m.group(1));
-        }
+    public void setGame(String html){
+        options.clear();
         //randomly generate the chosen celebrity and some more options
         celebrityIndex=rand.nextInt(names.size());
         options.add(celebrityIndex);
         int aux;
-        for (int i=1;i<4;i++){
+        while (options.size()<4){
             aux=rand.nextInt(names.size());
             if(!options.contains(aux)){
                 options.add(aux);
@@ -128,9 +122,9 @@ public class MainActivity extends AppCompatActivity {
         option4.setText(names.get(options.get(3)));
 
         // print some important info to check
-        Log.i("Celebrity",names.get(celebrityIndex));
+        Log.i("Celebrity",celebrityIndex+" "+names.get(celebrityIndex));
         Log.i("Image",images.get(celebrityIndex));
-        Log.i("Options",names.get(options.get(0))+" "+names.get(options.get(1))+" "+names.get(options.get(2))+" "+names.get(options.get(3)));
+        Log.i("Options",options.get(0)+" "+names.get(options.get(0))+" "+options.get(1)+" "+names.get(options.get(1))+" "+options.get(2)+" "+names.get(options.get(2))+" "+options.get(3)+" "+names.get(options.get(3)));
 
         // set the image in the image View
         DownloadImage task=new DownloadImage();
@@ -151,11 +145,14 @@ public class MainActivity extends AppCompatActivity {
         // the tags are the index of the celebrities in the names and images arrays
         if (answer==celebrityIndex){
             Toast.makeText(this,"Correct!",Toast.LENGTH_SHORT).show();
+            score++;
             setGame(htmlText);
         } else {
             Toast.makeText(this,"Wrong... It was "+names.get(celebrityIndex)+"!",Toast.LENGTH_SHORT).show();
             setGame(htmlText);
         }
+        games++;
+        textView.setText(String.format("%02d/%02d",score,games));
     }
 
     @Override
@@ -164,17 +161,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         imageView=(ImageView) findViewById(R.id.imageView);
+        textView=(TextView) findViewById(R.id.textView);
         // take the html from the website
         DownloadTask task=new DownloadTask();
         try {
             htmlText=task.execute(urlCelebrities).get();
+            htmlText.replace("\n","").replace("  ","");
+            // generate the names of the celebrities and set the image of the chosen one
+            names.clear();
+            images.clear();
+            // get urls for the images in the big string of html
+            Pattern p=Pattern.compile("src=\"(.*?)jpg\"");
+            Matcher m=p.matcher(htmlText);
+            while (m.find()) {
+                images.add(m.group(1));
+            }
+            // get the names of the celebrities
+            p=Pattern.compile("<img alt=\"(.*?)\"");
+            m=p.matcher(htmlText);
+            while (m.find()){
+                names.add(m.group(1));
+            }
+            setGame(htmlText);
         } catch (Exception e){
             Log.i("Error","Didnt work");
             e.printStackTrace();
         }
-
-        htmlText.replace("\n","").replace("  ","");
-        setGame(htmlText);
     }
 }
 
