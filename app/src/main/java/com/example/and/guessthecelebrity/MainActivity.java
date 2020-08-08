@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... urls) {
             Log.i("URL",urls[0]);
-            String result="";
+            StringBuilder result = new StringBuilder("");
             URL url;
             HttpURLConnection urlConnection=null;
             try {
@@ -50,10 +50,10 @@ public class MainActivity extends AppCompatActivity {
                 char current;
                 while (data!=-1){
                     current = (char) data;
-                    result+=current;
+                    result.append(current);
                     data=reader.read();
                 }
-                return result;
+                return result.toString();
             } catch (Exception e) {
                 //MalformedURL
                 e.printStackTrace();
